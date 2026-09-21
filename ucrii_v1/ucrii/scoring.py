@@ -87,7 +87,7 @@ def score_customer(raw, flags, anchors):
     if 'no_debits' in flags or 'no_merchant_payments' in flags or not np.isfinite(n['tfs_raw']) \
             or not np.isfinite(n['pcs_raw']) or not np.isfinite(n['mds_raw']):
         return {**{k: np.nan for k in COMPONENTS}, 'UCRII': np.nan, 'band': None,
-                'status': 'insufficient_data', 'flags': ';'.join(flags)}
+                'status': 'insufficient_data', 'confidence': 'none', 'flags': ';'.join(flags)}
 
     comp['TFS'], comp['PCS'], comp['MDS'] = n['tfs_raw'], n['pcs_raw'], n['mds_raw']
     # LSS: an undefined CV (no positive balance / no inflow at all) is the worst outcome for that sub-indicator
@@ -103,6 +103,7 @@ def score_customer(raw, flags, anchors):
     no_tfs_w = 1.0 - C.WEIGHTS['TFS']
     out = {k: 100.0 * comp[k] for k in COMPONENTS}
     out.update({'UCRII': ucrii, 'band': band(ucrii), 'status': 'ok', 'flags': ';'.join(flags),
+                'confidence': 'low' if 'low_history' in flags else 'normal',
                 # diagnostic: composite without the volume-driven TFS term, reweighted to 100 (Phase 4 sensitivity)
                 'UCRII_excl_TFS': float(sum(v for k, v in contrib.items() if k != 'TFS') / no_tfs_w)})
     out.update({f'contrib_{k}': v for k, v in contrib.items()})

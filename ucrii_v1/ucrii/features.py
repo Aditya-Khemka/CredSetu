@@ -10,7 +10,7 @@ from . import config as C
 
 RAW_COLUMNS = ['tfs_raw', 'pcs_raw', 'L1_balance_cv', 'L2_inflow_cv', 'mds_raw', 'F1_obligation_continuity',
                'F2_buffer_adequacy']
-DIAGNOSTIC_COLUMNS = ['pcs_excl_technical', 'n_successful_debits', 'n_attempts', 'n_obligations',
+DIAGNOSTIC_COLUMNS = ['pcs_incl_technical', 'n_successful_debits', 'n_attempts', 'n_obligations',
                       'n_unique_merchants', 'effective_merchants', 'mean_monthly_outflow']
 
 
@@ -106,10 +106,13 @@ def compute_raw_features(df, window_start=C.WINDOW_START, window_end=C.WINDOW_EN
     per_month = ok.groupby(ok['Timestamp'].dt.to_period('M')).size().reindex(months, fill_value=0)
     feats['tfs_raw'] = float(per_month.mean())
 
-    # ---- PCS: attempt-level success ratio (paper: "payment success ratio"). Diagnostic variant drops TECHNICAL failures.
-    feats['pcs_raw'] = len(ok) / len(att)
+    # ---- PCS: attempt-level success ratio (paper: "payment success ratio"), computed over attempts that reflect the
+    # customer's own behaviour. TECHNICAL failures (network/bank downtime) are not the customer's doing and are excluded
+    # from the denominator; INSUFFICIENT_FUNDS failures count. [ENG] Requires Failure_Reason codes.
+    # The paper-literal ratio (all failures counted) is kept as a diagnostic: pcs_incl_technical.
     tech = int(((att['Payment_Status'] == 'FAILED') & (att['Failure_Reason'] == 'TECHNICAL')).sum())
-    feats['pcs_excl_technical'] = len(ok) / max(len(att) - tech, 1)
+    feats['pcs_raw'] = len(ok) / (len(att) - tech)
+    feats['pcs_incl_technical'] = len(ok) / len(att)
 
     # ---- daily end-of-day balance over the window (history before the window carries the balance in)
     last_day = df['Timestamp'].dt.normalize()

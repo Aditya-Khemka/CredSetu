@@ -62,11 +62,28 @@ def test_pcs_repeated_failed_retry_counts_as_second_failure():
     assert f['pcs_raw'] == pytest.approx(0.5)
 
 
-def test_pcs_excl_technical_diagnostic():
+def test_pcs_excludes_technical_failures_from_the_denominator():
     rows = [{'ts': '2024-02-01', 'status': 'FAILED', 'reason': 'TECHNICAL'}, {'ts': '2024-02-02'},
             {'ts': '2024-02-03'}, {'ts': '2024-02-04'}]
     f, _ = feats(rows)
-    assert f['pcs_raw'] == pytest.approx(3 / 4) and f['pcs_excl_technical'] == pytest.approx(1.0)
+    assert f['pcs_raw'] == pytest.approx(1.0)                 # 3 successes / (4 attempts - 1 technical failure)
+    assert f['pcs_incl_technical'] == pytest.approx(3 / 4)    # paper-literal diagnostic
+
+
+def test_pcs_still_counts_insufficient_funds_failures():
+    rows = [{'ts': '2024-02-01', 'status': 'FAILED', 'reason': 'TECHNICAL'},
+            {'ts': '2024-02-02', 'status': 'FAILED', 'reason': 'INSUFFICIENT_FUNDS'},
+            {'ts': '2024-02-03'}, {'ts': '2024-02-04'}]
+    f, _ = feats(rows)
+    assert f['pcs_raw'] == pytest.approx(2 / 3) and f['pcs_incl_technical'] == pytest.approx(2 / 4)
+
+
+def test_pcs_unaffected_by_how_many_technical_failures_occur():
+    base = [{'ts': f'2024-02-{d:02d}'} for d in range(1, 11)] + [{'ts': '2024-02-11', 'status': 'FAILED', 'reason': 'INSUFFICIENT_FUNDS'}]
+    noisy = base + [{'ts': f'2024-03-{d:02d}', 'status': 'FAILED', 'reason': 'TECHNICAL'} for d in range(1, 8)]
+    a, _ = feats(base)
+    b, _ = feats(noisy)
+    assert a['pcs_raw'] == pytest.approx(b['pcs_raw'])
 
 
 def test_rows_outside_window_are_ignored():
@@ -169,6 +186,23 @@ def test_irregular_or_short_history_is_not_an_obligation():
 def test_no_obligations_flag_and_low_history_flag():
     _, flags = feats([{'ts': '2024-02-01'}, {'ts': '2024-02-02', 'cat': 'Grocery'}])
     assert 'no_obligations' in flags and 'low_history' in flags
+
+
+def test_low_history_threshold_is_150_successful_debits():
+    def n_rows(n):
+        return [{'ts': pd.Timestamp('2024-02-01') + pd.Timedelta(hours=i), 'cat': C.CATEGORIES[i % 11]} for i in range(n)]
+    _, below = feats(n_rows(C.LOW_HISTORY_MIN_SUCCESSFUL_DEBITS - 1))
+    _, at = feats(n_rows(C.LOW_HISTORY_MIN_SUCCESSFUL_DEBITS))
+    assert C.LOW_HISTORY_MIN_SUCCESSFUL_DEBITS == 150 and 'low_history' in below and 'low_history' not in at
+
+
+def test_confidence_column_low_for_low_history_normal_otherwise_none_if_unscored():
+    anchors = fit_anchors(_raw_cohort())
+    ok = {'tfs_raw': 50, 'pcs_raw': 0.95, 'L1_balance_cv': 0.4, 'L2_inflow_cv': 0.3, 'mds_raw': 0.88,
+          'F1_obligation_continuity': 0.98, 'F2_buffer_adequacy': 0.9}
+    assert score_customer(ok, [], anchors)['confidence'] == 'normal'
+    assert score_customer(ok, ['low_history'], anchors)['confidence'] == 'low'
+    assert score_customer({k: np.nan for k in INDICATORS}, ['no_debits'], anchors)['confidence'] == 'none'
 
 
 def test_f2_buffer_share_of_low_balance_days():

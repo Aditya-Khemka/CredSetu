@@ -17,8 +17,10 @@ BANDS = [(80.0, 'Low risk'), (60.0, 'Moderate risk'), (40.0, 'High risk'), (floa
 WINDOW_START = '2024-02-01'
 WINDOW_END = '2024-12-31'
 
-# [ENG] a customer with fewer successful debits than this in the window is scored but flagged 'low_history'.
-LOW_HISTORY_MIN_SUCCESSFUL_DEBITS = 60
+# [ENG] a customer with fewer successful debits than this in the window is scored but flagged 'low_history' and
+# reported with confidence='low'. 150 (~14/month) cleanly separated our synthetic sparse cohort (median 102) from the
+# baseline cohort (0% below 150); it is tied to the synthetic activity ranges, not an empirical cutoff.
+LOW_HISTORY_MIN_SUCCESSFUL_DEBITS = 150
 
 # [ENG] FRS / F2: a day is "low balance" if end-of-day balance < this fraction of mean monthly successful outflow.
 LOW_BALANCE_FRACTION = 0.25

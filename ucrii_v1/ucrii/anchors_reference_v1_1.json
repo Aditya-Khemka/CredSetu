@@ -1,0 +1,65 @@
+{
+ "anchors": {
+  "F1_obligation_continuity": {
+   "mode": "native",
+   "reference_n": 986,
+   "reference_p_hi": 1.0,
+   "reference_p_lo": 0.9456980519480519
+  },
+  "F2_buffer_adequacy": {
+   "a": 0.7313432835820896,
+   "b": 1.0,
+   "mode": "minmax",
+   "reference_n": 1000
+  },
+  "L1_balance_cv": {
+   "a": 0.16712543202187807,
+   "b": 0.6493798007735492,
+   "mode": "minmax",
+   "reference_n": 1000
+  },
+  "L2_inflow_cv": {
+   "a": 0.02184807347866457,
+   "b": 0.6214173074188767,
+   "mode": "minmax",
+   "reference_n": 1000
+  },
+  "mds_raw": {
+   "mode": "native",
+   "reference_n": 1000,
+   "reference_p_hi": 0.9150365176724027,
+   "reference_p_lo": 0.837796766796675
+  },
+  "pcs_raw": {
+   "a": 0.8922419533851277,
+   "b": 1.0,
+   "mode": "minmax",
+   "reference_n": 1000
+  },
+  "tfs_raw": {
+   "a": 25.172727272727276,
+   "b": 78.27727272727272,
+   "mode": "minmax",
+   "reference_n": 1000
+  }
+ },
+ "created_utc": "2026-09-21T17:55:03.939104+00:00",
+ "meta": {
+  "n_customers": 1000,
+  "source_dir": "/tmp/ref1000",
+  "window": [
+   "2024-02-01",
+   "2024-12-31"
+  ]
+ },
+ "no_stretch_min_spread": 0.1,
+ "note": "Anchors are derived from a SYNTHETIC reference cohort; they are not empirical Indian statistics.",
+ "percentiles": [
+  5,
+  95
+ ],
+ "window": [
+  "2024-02-01",
+  "2024-12-31"
+ ]
+}
