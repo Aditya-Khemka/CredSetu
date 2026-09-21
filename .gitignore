@@ -217,4 +217,4 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-DataGenerator/UPI_Txns/
+*/DataGenerator/UPI_Txns/*
