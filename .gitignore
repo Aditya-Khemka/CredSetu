@@ -216,10 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-
+.streamlit/
+**/.streamlit/
 */DataGenerator/UPI_Txns/*
 
 **/.claude
 **/UPI_Txns
 **/UPI_Txns/*
 **/UPI_Txns_scenarios/*
+claude.md
